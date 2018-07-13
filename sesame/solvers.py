@@ -16,6 +16,7 @@ from scipy.sparse import spdiags
 from scipy.sparse import coo_matrix, csr_matrix
 
 import logging
+import warnings
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 
 __all__ = ['solve_equilibrium', 'solve', 'IVcurve']
@@ -63,7 +64,7 @@ class Solver():
     equilibrium: numpy array of floats
         Electrostatic potential computed at thermal equilibrium.
     """
-
+    warnings.warn("Deprecated method, use common_solver instead", DeprecationWarning)
     def __init__(self, use_mumps=True):
 
         self.equilibrium = None
@@ -108,7 +109,7 @@ class Solver():
             (zeros) and the electrostatic potential. Keys are 'efn', 'efp' and
             'v'.  An exception is raised if no solution could be found.
         """
-
+        warnings.warn("Deprecated method, use common_solver instead", DeprecationWarning)
         res = self.common_solver('Poisson', system, guess, tol, periodic_bcs,\
                     maxiter, verbose, iterative, inner_tol, htp)
         return res
@@ -199,9 +200,9 @@ class Solver():
 
         return v
 
-    def common_solver(self, compute, system, guess, tol, periodic_bcs,\
-          maxiter, verbose, iterative, inner_tol, htp):
-
+    def common_solver(self, compute = 'all', system = None, guess=None, tol=1e-6, periodic_bcs=True,\
+          maxiter=300, verbose=True, iterative=False, inner_tol=1e-6, htp=1):
+        warnings.warn("parameters 'compute' and 'system' will be switched moving forward", FutureWarning)
         # Check if we only want the electrostatic potential
         if compute == 'Poisson': # Only Poisson is solved
             self.equilibrium = None # delete it to force its computation
@@ -298,16 +299,12 @@ class Solver():
 
         else:
             size = 3 * system.nx * system.ny * system.nz
-            if periodic_bcs == False and system.dimension != 1:
-                rhs = importlib.import_module('.getF{0}_abrupt'\
-                               .format(system.dimension), 'sesame')
-                lhs = importlib.import_module('.jacobian{0}_abrupt'\
-                               .format(system.dimension), 'sesame')
+            if periodic_bcs is False and system.dimension != 1:
+                rhs = importlib.import_module('.getF{0}_abrupt'.format(system.dimension), 'sesame')
+                lhs = importlib.import_module('.jacobian{0}_abrupt'.format(system.dimension), 'sesame')
             else:
-                rhs = importlib.import_module('.getF{0}'\
-                               .format(system.dimension), 'sesame')
-                lhs = importlib.import_module('.jacobian{0}'\
-                               .format(system.dimension), 'sesame')
+                rhs = importlib.import_module('.getF{0}'.format(system.dimension), 'sesame')
+                lhs = importlib.import_module('.jacobian{0}'.format(system.dimension), 'sesame')
 
             f = rhs.getF(system, x[2::3], x[0::3], x[1::3], self.equilibrium)
             rows, columns, data = lhs.getJ(system, x[2::3], x[0::3], x[1::3])
@@ -320,8 +317,8 @@ class Solver():
 
         return f, J
 
-    def _newton(self, system, x, tol=1e-6, periodic_bcs=True,\
-            maxiter=300, verbose=True, iterative=False, inner_tol=1e-6, htp=1):
+    def _newton(self, system, x, tol=1e-6, periodic_bcs=True, maxiter=300, verbose=True,
+                iterative=False, inner_tol=1e-6, htp=1):
 
         htpy = np.linspace(1./htp, 1, htp)
 
@@ -387,8 +384,7 @@ class Solver():
         else:
             return None
 
-    def IVcurve(self, system, voltages, guess, file_name, tol=1e-6,\
-                periodic_bcs=True, maxiter=300, verbose=True,\
+    def IVcurve(self, system, voltages, guess, file_name, tol=1e-6, periodic_bcs=True, maxiter=300, verbose=True,\
                 iterative=False, inner_tol=1e-6, htp=1, fmt='npz'):
         """
         Solve the Drift Diffusion Poisson equations for the voltages provided. The
