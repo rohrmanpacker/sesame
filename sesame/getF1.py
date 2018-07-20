@@ -11,5 +11,6 @@ from . import getF as f
 
 
 def getF(sys, v, efn, efp, veq):
-    warnings.warn("Deprecated method, use common_solver instead", DeprecationWarning)
+    warnings.warn("Method will be removed in next version", FutureWarning)
+    print("F1")
     return f.getF(sys,v,efn,efp,veq)

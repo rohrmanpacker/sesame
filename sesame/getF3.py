@@ -57,14 +57,13 @@ def getF(sys, v, efn, efp, veq):
         defectsF(sys, sys.defects_list, n, p, rho, r)
 
     # charge devided by epsilon
-    rho = rho / sys.epsilon
+    rho = rho / sys.epsilon  # TODO why????
 
     # reshape the array as array[y-indices, x-indices]
     _sites = np.arange(Nx*Ny*Nz, dtype=int).reshape(Nz, Ny, Nx)
 
-
-    def currents(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN,\
-                 dx, dxm1, dy, dym1, dz, dzm1, sites):
+    #
+    def currents(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN, dx, dxm1, dy, dym1, dz, dzm1, sites):
         jnx_s, jnx_sm1, jny_s, jny_smN, jnz_s, jnz_smNN = 0, 0, 0, 0, 0, 0
         jpx_s, jpx_sm1, jpy_s, jpy_smN, jpz_s, jpz_smNN = 0, 0, 0, 0, 0, 0
 
@@ -87,12 +86,12 @@ def getF(sys, v, efn, efp, veq):
             jnz_smNN = get_jn(sys, efn, v, smNN_s[0], smNN_s[1], dzm1)
             jpz_smNN = get_jp(sys, efp, v, smNN_s[0], smNN_s[1], dzm1)
 
-        return jnx_s, jnx_sm1, jny_s, jny_smN, jnz_s, jnz_smNN,\
-               jpx_s, jpx_sm1, jpy_s, jpy_smN, jpz_s, jpz_smNN
+        return jnx_s, jnx_sm1, jny_s, jny_smN, jnz_s, jnz_smNN, jpx_s, jpx_sm1, jpy_s, jpy_smN, jpz_s, jpz_smNN
 
+    # Drift diffusion Poisson equations that determine fn, fp, fv
     def ddp(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN,\
            dx, dxm1, dy, dym1, dz, dzm1, sites):
-    # Drift diffusion Poisson equations that determine fn, fp, fv
+
 
         # lattice distances
         dxbar = (dx + dxm1) / 2.
@@ -140,10 +139,8 @@ def getF(sys, v, efn, efp, veq):
         sm1_s = [sites - 1, sites]
 
         # compute currents
-        _, jnx_sm1, jny_s, jny_smN, jnz_s, jnz_smNN,\
-        _, jpx_sm1, jpy_s, jpy_smN, jpz_s, jpz_smNN = \
-        currents(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN,\
-                 dx, dxm1, dy, dym1, dz, dzm1, sites)
+        jnx_s, jnx_sm1, jny_s, jny_smN, jnz_s, jnz_smNN, jpx_s, jpx_sm1, jpy_s, jpy_smN, jpz_s, jpz_smNN = \
+            currents(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN, dx, dxm1, dy, dym1, dz, dzm1, sites)
 
         jnx_s = jnx_sm1 + dxbar * (r[sites] - sys.g[sites] - (jny_s - jny_smN)/dybar\
                                    - (jnz_s - jnz_smNN)/dzbar)
@@ -183,8 +180,7 @@ def getF(sys, v, efn, efp, veq):
     s_spNN = [sites, sites + Nx*Ny]
 
     # compute fn, fp, fv
-    ddp(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN,\
-        dx, dxm1, dy, dym1, dz, dzm1, sites)
+    ddp(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN, dx, dxm1, dy, dym1, dz, dzm1, sites)
 
     ###########################################################################
     #        left boundary: i = 0, 0 <= j <= Ny-1, 0 <= k <= Nz-1             #
@@ -422,7 +418,7 @@ def getF(sys, v, efn, efp, veq):
     smNN_s = [sites - Nx*Ny, sites]
     smN_s = [sites - Nx, sites]
     s_spN = [sites, sites + Nx]
-    s_spNN = [sites, sites - Nx*Ny*(Nz-1)]
+    s_spNN = [sites, sites - Nx*Ny*(Nz-1)] # haha 420
 
     # compute fn, fp, fv and update vector
     ddp(sys, efn, efp, v, smNN_s, smN_s, s_spN, s_spNN, dx, dxm1, dy, dym1, dz, dzm1, sites)

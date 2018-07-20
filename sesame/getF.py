@@ -8,7 +8,7 @@ from .observables import *
 from .defects import defectsF
 
 
-def getF(sys, v, efn, efp, veq):
+def getF(sys, v, efn, efp, veq, abrupt = False):
     ###########################################################################
     #               organization of the right hand side vector                #
     ###########################################################################
@@ -63,9 +63,9 @@ def getF(sys, v, efn, efp, veq):
     sites = _sites[0:Ny, 1:Nx - 1].flatten()
 
     # lattice distances
-    dx = np.tile(sys.dx[1:], Ny - 2)
-    dxm1 = np.tile(sys.dx[:-1], Ny - 2)
-    dy = np.repeat(sys.dy[1:], Nx - 2) #todo maybe change to Nx -1 idk
+    dx = np.tile(sys.dx[1:], Ny)
+    dxm1 = np.tile(sys.dx[:-1], Ny)
+    dy = np.repeat(sys.dy[1:], Nx - 2)
     dym1 = np.repeat(sys.dy[:-1], Nx - 2)
     dxbar = (dxm1 + dx) / 2.
     dybar = (dym1 + dy) / 2.

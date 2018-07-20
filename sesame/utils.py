@@ -16,7 +16,7 @@ def get_indices(sys, p, site=False):
     # p: list containing x,y,z coordinates, use zeros for unused dimensions
 
     x, y, z = p
-    xpts, ypts, zpts = sys.xpts, sys.ypts, sys.zpts
+    xpts, ypts = sys.xpts, sys.ypts
     nx = len(xpts)
     x = nx-len(xpts[xpts >= x])
     s = x
@@ -26,15 +26,10 @@ def get_indices(sys, p, site=False):
         y = ny-len(ypts[ypts >= y])
         s += nx*y
 
-    if zpts is not None:
-        nz = len(zpts)
-        z = nz-len(zpts[zpts >= z])
-        s += nx*ny*z
-
     if site:
         return s
     else:
-        return x, int(y), int(z)
+        return x, int(y)
 
 def get_xyz_from_s(sys, site):
     nx, ny, nz = sys.nx, sys.ny, sys.nz
@@ -180,8 +175,8 @@ def get_line_defects_sites(system, location):
 
     xa, ya = location[0]
     xb, yb = location[1]
-    ia, ja, _ = get_indices(system, (xa, ya, 0))
-    ib, jb, _ = get_indices(system, (xb, yb, 0))
+    ia, ja = get_indices(system, (xa, ya, 0))
+    ib, jb = get_indices(system, (xb, yb, 0))
 
     Dx = abs(ib - ia)    # distance to travel in X
     Dy = abs(jb - ja)    # distance to travel in Y

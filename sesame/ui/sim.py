@@ -24,8 +24,11 @@ class SimulationWorker(QObject):
     simuDone = pyqtSignal()
     newFile = pyqtSignal(str)
 
-    def __init__(self, loop, system, solverSettings,\
-                       generation, paramName, parent=None):
+    def __init__(self, loop, system, solverSettings,generation, paramName, parent=None):
+        print(loop)
+        print(solverSettings)
+        print(generation,paramName)
+
         super(SimulationWorker, self).__init__()
 
         self.parent = parent
@@ -38,6 +41,7 @@ class SimulationWorker(QObject):
 
         self.logger = logging.getLogger(__name__)
         self.abort = False
+        print(type(system))
  
     @pyqtSlot()
     def abortSim(self):
@@ -91,11 +95,12 @@ class SimulationWorker(QObject):
         # Equilibrium potential
         #===========================================================
         nx = system.nx
-
+        print(type(system))
+        print(nx) #TODO REMOVE LOL
         # Equilibrium guess
         guess = solver.make_guess(system)
         # Solve Poisson equation
-        solver.common_solver(system, 'Poisson', guess, tol, BCs, maxiter,\
+        solver.common_solver( 'Poisson', system, guess, tol, BCs, maxiter,
                              True, iterative, iterPrec, htpy)
 
         if solver.equilibrium is not None:
@@ -207,9 +212,11 @@ class SimulationWorker(QObject):
         #===========================================================
         # Loop over generation rates
         #===========================================================
+
         if loop == 'generation':
             self.logger.info("Generation rate loop starting now")
             for idx, p in enumerate(loopValues):
+                print(idx, p)
                 # give the named parameter its value
                 exec(paramName + '=' + str(p), globals())
                 self.logger.info("Parameter value: {0} = {1}".format(paramName, p))
