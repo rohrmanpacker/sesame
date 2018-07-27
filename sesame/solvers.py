@@ -305,9 +305,9 @@ class Solver():
 
         # form the Jacobian
         if self.use_mumps and mumps_available:
-            J = coo_matrix((data, (rows, columns)), shape=(size, size), dtype=np.float64)
+            J = coo_matrix((data, (rows, columns)),  dtype=np.float64)
         else:
-            J = csr_matrix((data, (rows, columns)), shape=(size, size), dtype=np.float64)
+            J = csr_matrix((data, (rows, columns)), dtype=np.float64)
 
         return f, J
 
@@ -369,7 +369,7 @@ class Solver():
                     break
 
                 except NewtonError:
-                    msg = "**  The Newton-Raphson algorithm diverged  **"
+                    msg = "**  The Newton-Raphson algorithm diverged, try a better guess or finer grid  **"
                     logging.error(msg)
                     break
                         

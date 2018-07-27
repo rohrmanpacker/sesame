@@ -8,7 +8,7 @@ from .observables import *
 from .defects import defectsF
 
 
-def getF(sys, v, efn, efp, veq, abrupt = False):
+def getF(sys, v, efn, efp, veq, periodic = True):
     ###########################################################################
     #               organization of the right hand side vector                #
     ###########################################################################
@@ -65,8 +65,12 @@ def getF(sys, v, efn, efp, veq, abrupt = False):
     # lattice distances
     dx = np.tile(sys.dx[1:], Ny)
     dxm1 = np.tile(sys.dx[:-1], Ny)
-    dy = np.repeat(sys.dy[1:], Nx - 2)
-    dym1 = np.repeat(sys.dy[:-1], Nx - 2)
+    if periodic:
+        dy   = np.repeat(np.append(sys.dy[1:],  sys.dy[0]), Nx - 2)
+        dym1 = np.repeat(np.append(sys.dy[:-1], sys.dy[0]), Nx - 2)
+    else:
+        dy   = np.repeat(sys.dy[1:],  Nx - 2)
+        dym1 = np.repeat(sys.dy[:-1], Nx - 2)
     dxbar = (dxm1 + dx) / 2.
     dybar = (dym1 + dy) / 2.
 
@@ -135,7 +139,7 @@ def getF(sys, v, efn, efp, veq, abrupt = False):
     dxm1 = sys.dx[-1]
     dy = sys.dy[1:]
     dym1 = sys.dy[:-1]
-    dxbar = np.tile(sys.dx[-1], Ny - 2)
+    dxbar = np.tile(sys.dx[-1], Ny)
     dybar = (dy + dym1) / 2.
 
     # currents
@@ -174,11 +178,11 @@ def getF(sys, v, efn, efp, veq, abrupt = False):
 
     # compute the currents
     jnx_sm1 = get_jn(sys, efn, v, Nx - 2, Nx - 1, dxm1)
-    jny_s = get_jn(sys, efn, v, Nx - 1, 2 * Nx - 1, dy)
+    jny_s = get_jn(sys, efn, v, Nx - 1, (2 * Nx - 1) % N, dy)
     jny_smN = get_jn(sys, efn, v, Nx * Ny - 1, Nx - 1, dym1)
 
     jpx_sm1 = get_jp(sys, efp, v, Nx - 2, Nx - 1, dxm1)
-    jpy_s = get_jp(sys, efp, v, Nx - 1, 2 * Nx - 1, dy)
+    jpy_s = get_jp(sys, efp, v, Nx - 1, (2 * Nx - 1) % N, dy)
     jpy_smN = get_jp(sys, efp, v, Nx * Ny - 1, Nx - 1, dym1)
 
     jnx_s = jnx_sm1 + dxbar * (r[sites] - sys.g[sites] - (jny_s - jny_smN) / dybar)
@@ -227,5 +231,4 @@ def getF(sys, v, efn, efp, veq, abrupt = False):
     vec[3 * sites + 1] = bp
     vec[3 * sites + 2] = bv
 
-    vec[3 * sites + 2] = fv
     return vec
