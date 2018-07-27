@@ -36,16 +36,14 @@ Sn_left, Sp_left, Sn_right, Sp_right = 1e7, 0, 0, 1e7
 # This function specifies the simulation contact recombination velocity
 
 # GB defect state properties
-rho_GB = 1e14               # defect density [1/cm^2]
+rho_GB = [1e10, 1e14]               # defect density [1/cm^2]
 S_GB = 1e-14                # capture cross section [cm^2]
 # Specify the two points that make the line containing additional charges
 p1 = (1e-4, 1.5e-4)      # [cm]
 p2 = (2e-4, 1.5e-4)     # [cm]
 currents = []
 
-E_GB_to_test = [-.5,-.4,-.3,-.2,-.1,0,.1,.2,.3,.4,.5]
-for E_GB in E_GB_to_test: # energy of gap state from intrinsic level [eV]
-    #building system
+def makesystem(rho_GB):
     sys = builder.Builder(x, y)
     sys.add_material(material)
     sys.add_donor(nD, n_region)
@@ -53,11 +51,24 @@ for E_GB in E_GB_to_test: # energy of gap state from intrinsic level [eV]
     sys.contact_type('Ohmic', 'Ohmic')
     sys.contact_S(Sn_left, Sp_left, Sn_right, Sp_right)
     sys.add_line_defects([p1, p2], rho_GB, S_GB, E=E_GB, transition=(1, -1))
-    sys.generation(lambda x, y: 1e21 )
 
-    solver = solvers.Solver()
-    equilibrium = solver.solve_equilibrium(sys)
-    solution = solver.solve(sys, equilibrium)
+    return(sys)
+
+
+E_GB_to_test = [-.5,-.4,-.3,-.2,-.1,0,.1,.2,.3,.4,.5]
+G_for_guess = [1e15,1e17,1e19,1e20,1e21]
+
+for E_GB in E_GB_to_test: # energy of gap state from intrinsic level [eV]
+    #building system
+    sys = makesystem(rho_GB[1])
+    sys.generation(lambda x, y: 1e15)
+    equilibrium = solvers.solve_equilibrium(sys)
+    solution = solvers.solve(sys, equilibrium)
+
+    equilibrium = solvers.solve_equilibrium(sys)
+    for g in G_for_guess:
+        sys.generation(lambda x, y: g)
+        solution = solvers.solve(sys, equilibrium)
     print(E_GB)
     analyze = analyzer.Analyzer(sys, solution)
 
