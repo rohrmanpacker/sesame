@@ -1,29 +1,31 @@
-import sesame
+from sesame import builder, solvers
+#import sesame
 import numpy as np
+import importlib
+
 
 L = 3e-4 # length of the system in the x-direction [cm]
 
 # Mesh
-x = np.concatenate((np.linspace(0,1.2e-4, 100, endpoint=False),
-                    np.linspace(1.2e-4, L, 50)))
+xpts = np.concatenate((np.linspace(0,1.2e-4, 100, endpoint=False), np.linspace(1.2e-4, L, 50)))
 
 # Create a system
-sys = sesame.Builder(x)
+sys = builder.Builder(xpts)
 
 # Dictionary with the material parameters
-material = {'Nc':8e17, 'Nv':1.8e19, 'Eg':1.5, 'affinity':3.9, 'epsilon':9.4,
+material = {'Nc':1e19, 'Nv':1e19, 'Eg':1.5, 'affinity':3.9, 'epsilon':9.4,
         'mu_e':100, 'mu_h':100, 'tau_e':10e-9, 'tau_h':10e-9, 'Et':0}
 
 # Add the material to the system
 sys.add_material(material)
 
-junction = 50e-7 # extent of the junction from the left contact [m]
+junction = 50e-7 # extent of the junction from the left contact [cm]
 def n_region(pos):
-    x = pos
+    x, y = pos
     return x < junction
 
 def p_region(pos):
-    x = pos
+    x, y = pos
     return x >= junction
 
 # Add the donors
@@ -42,14 +44,14 @@ Sn_left, Sp_left, Sn_right, Sp_right = 1e7, 0, 0, 1e7
 sys.contact_S(Sn_left, Sp_left, Sn_right, Sp_right)
 
 # First find the equilibrium solution
-solution = sesame.solve_equilibrium(sys)
+solution = solvers.solve_equilibrium(sys)
 
 # Define a function for the generation rate
 phi = 1e17         # photon flux [1/(cm^2 s)]
 alpha = 2.3e4      # absorption coefficient [1/cm]
 
 # Define a function for the generation rate
-def gfcn(x):
+def gfcn(x, y):
     return phi * alpha * np.exp(-alpha * x)
 
 # add generation to system
@@ -57,8 +59,8 @@ sys.generation(gfcn)
 
 # IV curve
 voltages = np.linspace(0, 0.95, 40)
-j = sesame.IVcurve(sys, voltages, solution, '1dhomo_V')
-
+j = solvers.IVcurve(sys, voltages, solution, '1dhomo_V')
+print("we did it?")
 # convert dimensionless current to dimension-ful current
 j = j * sys.scaling.current
 # save voltage and current values to dictionary

@@ -1,8 +1,8 @@
-import sesame
 import numpy as np
+from sesame import solvers, builder, analyzer
 
 ######################################################
-##      define the system
+#               define the system                    #
 ######################################################
 
 # dimensions of the system
@@ -23,7 +23,7 @@ y = np.concatenate((np.linspace(0, 1.75e-4, 50, endpoint=False),
                     np.linspace(2.75e-4, Ly, 50)))
 
 # Create a system
-sys = sesame.Builder(x, y)
+sys = builder.Builder(x, y)
 
 # Dictionary with the material parameters
 mat = {'Nc':8e17, 'Nv':1.8e19, 'Eg':1.5, 'epsilon':9.4, 'Et': 0,
@@ -66,10 +66,10 @@ p2 = (Lx, Ly)
 sys.add_line_defects([p1, p2], rhoGB, s, E=E, transition=(0,0))
 
 # find equilibrium solution with GB.  Note we provide the GB-free equilibrium solution as a starting guess
-solution = sesame.solve_equilibrium(sys, periodic_bcs=False)
+solution = solvers.solve_equilibrium(sys, periodic_bcs=False)
 
 ######################################################
-##      EBIC generation profile parameters
+#      EBIC generation profile parameters            #
 ######################################################
 
 q = 1.6e-19      # C
@@ -94,7 +94,7 @@ Ld = np.sqrt(sys.mu_e[0] * sys.tau_e[0]) * sys.scaling.length
 Gtot = Gtot
 
 ######################################################
-##      vary position of the electron beam
+#      vary position of the electron beam            #
 ######################################################
 x0list = np.linspace(.1e-4, 2.5e-4, 11)
 # Array in which to store results
@@ -114,10 +114,10 @@ for idx, x0 in enumerate(x0list):
     sys.generation(excitation)
 
     # solve the system
-    solution = sesame.solve(sys, periodic_bcs=False, tol=1e-8)
+    solution = solvers.solve(sys, periodic_bcs=False, tol=1e-8)
 
     # get analyzer object to evaluate current and radiative recombination
-    az = sesame.Analyzer(sys, solution)
+    az = analyzer.Analyzer(sys, solution)
     # compute (dimensionless) current and convert to to dimension-ful form
     tj = az.full_current() * sys.scaling.current * sys.scaling.length
     # save the current

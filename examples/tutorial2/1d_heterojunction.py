@@ -30,9 +30,9 @@ CdTe = {'Nc': 8e17, 'Nv': 1.8e19, 'Eg':1.5, 'epsilon':9.4, 'Et': 0,
         'affinity': 3.9}
 
 # CdS region
-CdS_region = lambda x: x<=t1
+CdS_region = lambda pos: pos[0]<=t1
 # CdTe region
-CdTe_region = lambda x: x>t1
+CdTe_region = lambda pos: pos[0]>t1
 
 # Add the material to the system
 sys.add_material(CdS, CdS_region)     # adding CdS
@@ -65,7 +65,7 @@ result = sesame.solve_equilibrium(sys)
 phi0 = 1e17     # incoming flux [1/(cm^2 sec)]
 alpha = 2.3e4   # absorbtion coefficient [1/cm]
 # Define a function for illumination profile
-f = lambda x: phi0*alpha*np.exp(-x*alpha)   # f is an "inline" function
+f = lambda x,y: phi0*alpha*np.exp(-x*alpha)   # f is an "inline" function
 # This function adds generation to the simulation
 sys.generation(f)
 
