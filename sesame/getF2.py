@@ -12,5 +12,4 @@ from . import getF as f
 
 def getF(sys, v, efn, efp, veq):
     warnings.warn("Method will be removed in next version", FutureWarning)
-    print("F2")
     return f.getF(sys,v,efn,efp,veq)

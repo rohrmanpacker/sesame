@@ -9,5 +9,4 @@ from . import jacobian as j
 
 def getJ(sys, v, efn, efp):
     warnings.warn("Method will be removed in next version", FutureWarning)
-    print("J2")
     return j.getJ(sys, v, efn, efp)

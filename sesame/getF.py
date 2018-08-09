@@ -133,12 +133,16 @@ def getF(sys, v, efn, efp, veq, periodic = True):
     #               right boundary: i = Nx-1 and 0 < j < Ny-1                 #
     ###########################################################################
     # list of the sites on the right side
-    sites = _sites[1:Ny - 1, Nx - 1].flatten()
+    sites = _sites[:Ny, Nx - 1].flatten()
 
     # dxbar and dybar
     dxm1 = sys.dx[-1]
-    dy = sys.dy[1:]
-    dym1 = sys.dy[:-1]
+    if periodic:
+        dy   = np.append(sys.dy[1:],  sys.dy[0])
+        dym1 = np.append(sys.dy[:-1], sys.dy[0])
+    else:
+        dy   = sys.dy[1:]
+        dym1 = sys.dy[:-1]
     dxbar = np.tile(sys.dx[-1], Ny)
     dybar = (dy + dym1) / 2.
 

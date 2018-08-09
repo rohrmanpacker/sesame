@@ -153,7 +153,10 @@ class Builder():
         self.ypts = ypts
         self.dy = (self.ypts[1:] - self.ypts[:-1]) / self.scaling.length
         if periodic:
-            self.dy = np.append(self.dy, self.dx[0])#TODO arbitrary value
+            if len(self.dy) == 0:
+                self.dy = np.append(self.dy, self.dx[0])
+            else:
+                self.dy = np.append(self.dy, self.dy[0])
         self.ny = ypts.shape[0]
         self.dimension = 2 # TODO remove this and make everything call generic
 

@@ -215,7 +215,7 @@ def getJ(sys, v, efn, efp, periodic = True):
 
     dfn_cols = zip(3 * ((sites - Nx)%Num), 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1), 3 * (sites - 1) + 2,
                    3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * (sites + 1), 3 * (sites + 1) + 2, \
-                   3 * (sites + Nx), 3 * (sites + Nx) + 2)
+                   3 * ((sites + Nx)%Num), 3 * ((sites + Nx)%Num) + 2)
 
     dfn_data = zip(defn_smN, dv_smN, defn_sm1, dv_sm1, defn_s, defp_s, dv_s, \
                    defn_sp1, dv_sp1, defn_spN, dv_spN)
@@ -239,7 +239,7 @@ def getJ(sys, v, efn, efp, periodic = True):
 
     dfp_cols = zip(3 * ((sites - Nx)%Num) + 1, 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1) + 1, 3 * (sites - 1) + 2,
                    3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * (sites + 1) + 1, 3 * (sites + 1) + 2, \
-                   3 * (sites + Nx) + 1, 3 * (sites + Nx) + 2)
+                   3 * ((sites + Nx)%Num) + 1, 3 * ((sites + Nx)%Num) + 2)
 
     dfp_data = zip(defp_smN, dv_smN, defp_sm1, dv_sm1, defn_s, defp_s, dv_s, \
                    defp_sp1, dv_sp1, defp_spN, dv_spN)
@@ -253,7 +253,7 @@ def getJ(sys, v, efn, efp, periodic = True):
     dfv_rows = np.reshape(np.repeat(3 * sites + 2, 7), (len(sites), 7)).tolist()
 
     dfv_cols = zip(3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1) + 2, 3 * sites, 3 * sites + 1, 3 * sites + 2,
-                   3 * (sites + 1) + 2, 3 * (sites + Nx) + 2)
+                   3 * (sites + 1) + 2, 3 * ((sites + Nx)%Num) + 2)
 
     dfv_data = zip(dvmN, dvm1, defn, defp, dv, dvp1, dvpN)
 
@@ -315,20 +315,24 @@ def getJ(sys, v, efn, efp, periodic = True):
     # right boundary of the system.
 
     # list of the sites on the right side
-    sites = _sites[1:Ny - 1, Nx - 1].flatten()
+    sites = _sites[0:Ny, Nx - 1].flatten()
 
     # dxbar and dybar
     dxm1 = sys.dx[-1]
-    dy = sys.dy[1:]
-    dym1 = sys.dy[:-1]
+    if periodic:
+        dy   = np.append(sys.dy[1:],  sys.dy[0])
+        dym1 = np.append(sys.dy[:-1], sys.dy[0])
+    else:
+        dy   = sys.dy[1:]
+        dym1 = sys.dy[:-1]
     dxbar = np.tile(sys.dx[-1], Ny)
     dybar = (dy + dym1) / 2.
 
     # -------------------------- bn derivatives --------------------------------
     # compute the currents derivatives
     djx_sm1 = get_jn_derivs(sys, efn, v, sites - 1, sites, dxm1)
-    djy_s = get_jn_derivs(sys, efn, v, sites, sites + Nx, dy)
-    djy_smN = get_jn_derivs(sys, efn, v, sites - Nx, sites, dym1)
+    djy_s = get_jn_derivs(sys, efn, v, sites, (sites + Nx)%Num, dy)
+    djy_smN = get_jn_derivs(sys, efn, v, (sites - Nx)%Num, sites, dym1)
 
     defn_smN, dv_smN, defn_sm1, dv_sm1, defn_s, defp_s, dv_s, \
     defn_spN, dv_spN = \
@@ -338,7 +342,7 @@ def getJ(sys, v, efn, efp, periodic = True):
     dbn_rows = np.reshape(np.repeat(3 * sites, 9), (len(sites), 9)).tolist()
 
     dbn_cols = zip(3 * ((sites - Nx)%Num), 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1), 3 * (sites - 1) + 2,
-                   3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * (sites + Nx), 3 * (sites + Nx) + 2)
+                   3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * ((sites + Nx)%Num), 3 * ((sites + Nx)%Num) + 2)
 
     dbn_data = zip(defn_smN, dv_smN, defn_sm1, dv_sm1, defn_s, defp_s, \
                    dv_s, defn_spN, dv_spN)
@@ -348,8 +352,8 @@ def getJ(sys, v, efn, efp, periodic = True):
     # -------------------------- bp derivatives --------------------------------
     # compute the currents derivatives
     djx_sm1 = get_jp_derivs(sys, efp, v, sites - 1, sites, dxm1)
-    djy_s = get_jp_derivs(sys, efp, v, sites, sites + Nx, dy)
-    djy_smN = get_jp_derivs(sys, efp, v, sites - Nx, sites, dym1)
+    djy_s = get_jp_derivs(sys, efp, v, sites, (sites + Nx)%Num, dy)
+    djy_smN = get_jp_derivs(sys, efp, v, (sites - Nx)%Num, sites, dym1)
 
     defp_smN, dv_smN, defp_sm1, dv_sm1, defn_s, defp_s, dv_s, \
     defp_spN, dv_spN = \
@@ -358,8 +362,8 @@ def getJ(sys, v, efn, efp, periodic = True):
     # update the sparse matrix row and columns
     dbp_rows = np.reshape(np.repeat(3 * sites + 1, 9), (len(sites), 9)).tolist()
 
-    dbp_cols = zip(3 * (sites - Nx) + 1, 3 * (sites - Nx) + 2, 3 * (sites - 1) + 1, 3 * (sites - 1) + 2,
-                   3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * (sites + Nx) + 1, 3 * (sites + Nx) + 2)
+    dbp_cols = zip(3 * ((sites - Nx) % Num) + 1, 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1) + 1, 3 * (sites - 1) + 2,
+                   3 * sites, 3 * sites + 1, 3 * sites + 2, 3 * ((sites + Nx)%Num) + 1, 3 * ((sites + Nx)%Num) + 2)
 
     dbp_data = zip(defp_smN, dv_smN, defp_sm1, dv_sm1, defn_s, defp_s, \
                    dv_s, defp_spN, dv_spN)
@@ -402,8 +406,8 @@ def getJ(sys, v, efn, efp, periodic = True):
     dbn_rows = np.reshape(np.repeat(3 * sites, 9), (len(sites), 9)).tolist()
 
     dbn_cols = [3 * (sites - 1), 3 * (sites - 1) + 2, 3 * sites, 3 * sites + 1, 3 * sites + 2,
-                3 * (sites + Nx), 3 * (sites + Nx) + 2, 3 * (sites + Nx * (Ny - 1)),
-                3 * (sites + Nx * (Ny - 1)) + 2]
+                3 * ((sites + Nx)%Num), 3 * ((sites + Nx)%Num) + 2, 3 * ((sites + Nx * (Ny - 1))%Num),
+                3 * ((sites + Nx * (Ny - 1))%Num) + 2]
 
     dbn_data = [defn_sm1, dv_sm1, defn_s[0], defp_s[0], dv_s[0], defn_spN, dv_spN, \
                 defn_smN, dv_smN]
@@ -424,8 +428,8 @@ def getJ(sys, v, efn, efp, periodic = True):
     dbp_rows = np.reshape(np.repeat(3 * sites + 1, 9), (len(sites), 9)).tolist()
 
     dbp_cols = [3 * (sites - 1) + 1, 3 * (sites - 1) + 2, 3 * sites, 3 * sites + 1, 3 * sites + 2, \
-                3 * (sites + Nx) + 1, 3 * (sites + Nx) + 2, 3 * (sites + Nx * (Ny - 1)) + 1,
-                3 * (sites + Nx * (Ny - 1)) + 2]
+                3 * ((sites + Nx%Num)) + 1, 3 * ((sites + Nx)%Num) + 2, 3 * ((sites + Nx * (Ny - 1))%Num) + 1,
+                3 * ((sites + Nx * (Ny - 1))%Num) + 2]
 
     dbp_data = [defp_sm1, dv_sm1, defn_s[0], defp_s[0], dv_s[0], defp_spN, dv_spN, \
                 defp_smN, dv_smN]
@@ -467,6 +471,7 @@ def getJ(sys, v, efn, efp, periodic = True):
     # update the sparse matrix row and columns
     dbn_rows = np.reshape(np.repeat(3 * sites, 9), (len(sites), 9)).tolist()
 
+
     dbn_cols = [3 * ((sites - Nx * (Ny - 1))%Num), 3 * ((sites - Nx * (Ny - 1))%Num) + 2, 3 * ((sites - Nx)%Num),
                 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1), 3 * (sites - 1) + 2, 3 * sites, 3 * sites + 1, 3 * sites + 2]
 
@@ -488,7 +493,7 @@ def getJ(sys, v, efn, efp, periodic = True):
     # update the sparse matrix row and columns
     dbp_rows = np.reshape(np.repeat(3 * sites + 1, 9), (len(sites), 9)).tolist()
 
-    dbp_cols = [3 * (sites - Nx * (Ny - 1)) + 1, 3 * (sites - Nx * (Ny - 1)) + 2, 3 * ((sites - Nx)%Num) + 1,
+    dbp_cols = [3 * ((sites - Nx * (Ny - 1))%Num) + 1, 3 * ((sites - Nx * (Ny - 1))%Num) + 2, 3 * ((sites - Nx)%Num) + 1,
                 3 * ((sites - Nx)%Num) + 2, 3 * (sites - 1) + 1, 3 * (sites - 1) + 2, 3 * sites, 3 * sites + 1, 3 * sites + 2]
 
     dbp_data = [defp_spN, dv_spN, defp_smN, dv_smN, defp_sm1, dv_sm1, \
