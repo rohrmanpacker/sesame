@@ -489,12 +489,12 @@ class Solver():
                     filename = "%s.gzip" % name
                     save_sim(system, result, filename)
                 # 2. Compute the steady state current
-                try:
-                    az = Analyzer(system, result)
-                    J[idx] = az.full_current()
-                except Exception:
-                    logging.info("Could not compute the current for the applied voltage"\
-                      + " {0} V (index {1}).".format(voltages[idx], idx))
+                #try:
+                az = Analyzer(system, result)
+                J[idx] = az.full_current()
+                #except Exception:
+                #    logging.info("Could not compute the current for the applied voltage"\
+                #     + " {0} V (index {1}).".format(voltages[idx], idx))
 
             else:
                 logging.info("The solver failed to converge for the applied voltage"\
