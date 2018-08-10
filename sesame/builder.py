@@ -471,8 +471,10 @@ class Builder():
             Additional arguments to be passed to the function.
         """
 
-        g = [f(x, y, *args) for y in self.ypts for x in self.xpts]
-
+        try:
+            g = [f(x, y, *args) for y in self.ypts for x in self.xpts]
+        except TypeError:
+            g = [f(x, *args) for x in self.xpts]
         self.g = np.asarray(g) / self.scaling.generation
 
         # compute the integral of the generation
@@ -558,7 +560,11 @@ def get_sites(sys, location):
     pos = np.transpose([np.tile(sys.xpts, ny), np.repeat(sys.ypts, nx)])
     pos = (pos[:,0], pos[:,1])
 
-    mask = location(pos)
+    try:
+        mask = location(pos)
+    except TypeError:
+        mask = location(pos[0])
+
     if type(mask) == bool:
         return sites, pos
     else:

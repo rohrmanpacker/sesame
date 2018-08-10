@@ -8,7 +8,7 @@ import numpy as np
 
 
 from . utils import save_sim
-from . import getFandJ_eq, getF, jacobian
+from . import getFandJ_eq, getF, getJ
 from . analyzer import Analyzer
 
 import scipy.sparse.linalg as lg
@@ -285,7 +285,7 @@ class Solver():
             f, rows, columns, data = getFandJ_eq.getFandJ_eq(system, x, periodic_bcs)
         else:
             f = getF.getF(system, x[2::3], x[0::3], x[1::3], self.equilibrium)
-            rows, columns, data = jacobian.getJ(system, x[2::3], x[0::3], x[1::3])
+            rows, columns, data = getJ.getJ(system, x[2::3], x[0::3], x[1::3])
 
         # form the Jacobian
         if self.use_mumps and mumps_available:

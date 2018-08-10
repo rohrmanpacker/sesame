@@ -18,12 +18,10 @@ material = {'Nc':1e19, 'Nv':1e19, 'Eg':1.5, 'affinity':3.9, 'epsilon':9.4,
 sys.add_material(material)
 
 junction = 50e-7 # extent of the junction from the left contact [cm]
-def n_region(pos):
-    x, y = pos
+def n_region(x):
     return x < junction
 
-def p_region(pos):
-    x, y = pos
+def p_region(x):
     return x >= junction
 
 # Add the donors
