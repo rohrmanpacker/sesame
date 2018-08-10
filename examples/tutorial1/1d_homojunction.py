@@ -1,7 +1,5 @@
-from sesame import builder, solvers
-#import sesame
+import sesame
 import numpy as np
-import importlib
 
 
 L = 3e-4 # length of the system in the x-direction [cm]
@@ -10,7 +8,7 @@ L = 3e-4 # length of the system in the x-direction [cm]
 xpts = np.concatenate((np.linspace(0,1.2e-4, 100, endpoint=False), np.linspace(1.2e-4, L, 50)))
 
 # Create a system
-sys = builder.Builder(xpts)
+sys = sesame.Builder(xpts)
 
 # Dictionary with the material parameters
 material = {'Nc':1e19, 'Nv':1e19, 'Eg':1.5, 'affinity':3.9, 'epsilon':9.4,
@@ -44,7 +42,7 @@ Sn_left, Sp_left, Sn_right, Sp_right = 1e7, 0, 0, 1e7
 sys.contact_S(Sn_left, Sp_left, Sn_right, Sp_right)
 
 # First find the equilibrium solution
-solution = solvers.solve_equilibrium(sys)
+solution = sesame.solve_equilibrium(sys)
 
 # Define a function for the generation rate
 phi = 1e17         # photon flux [1/(cm^2 s)]
@@ -59,8 +57,8 @@ sys.generation(gfcn)
 
 # IV curve
 voltages = np.linspace(0, 0.95, 40)
-j = solvers.IVcurve(sys, voltages, solution, '1dhomo_V')
-print("we did it?")
+j = sesame.IVcurve(sys, voltages, solution, '1dhomo_V')
+
 # convert dimensionless current to dimension-ful current
 j = j * sys.scaling.current
 # save voltage and current values to dictionary
