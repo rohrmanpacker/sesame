@@ -332,7 +332,7 @@ class Builder():
         --------
         add_line_defects
         """
-        warnings.warn("Use add_defects instead", FutureWarning)
+        warnings.warn("Use add_defects instead", DeprecationWarning)
         self.add_defects(location, N, sigma_e, sigma_h, E, transition)
 
     def add_line_defects(self, location, N, sigma_e, sigma_h=None, E=None, transition=(1,-1)):
@@ -373,7 +373,7 @@ class Builder():
         --------
         add_plane_defects
         """
-        warnings.warn("Use add_defects instead", FutureWarning)
+        warnings.warn("Use add_defects instead", DeprecationWarning)
         self.add_defects(location, N, sigma_e, sigma_h, E, transition)
 
     def add_plane_defects(self, location, N, sigma_e, sigma_h=None, E=None, transition=(1,-1)):
@@ -420,7 +420,7 @@ class Builder():
         --------
         add_line_defects
         """
-        warnings.warn("Use add_defects instead", FutureWarning)
+        warnings.warn("Use add_defects instead", DeprecationWarning)
         self.add_defects(location, N, sigma_e, sigma_h, E, transition)
  
     def doping_profile(self, density, location):

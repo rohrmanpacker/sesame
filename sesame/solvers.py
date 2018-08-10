@@ -4,12 +4,12 @@
 # LICENSE.rst found in the top-level directory of this distribution.
 
 import numpy as np
-import importlib
-from scipy.io import savemat
-from . import analyzer
-from . utils import save_sim
 
-from .analyzer import Analyzer
+
+
+from . utils import save_sim
+from . import getFandJ_eq, getF, jacobian
+from . analyzer import Analyzer
 
 import scipy.sparse.linalg as lg
 from scipy.sparse import spdiags
@@ -44,7 +44,7 @@ class BCsError(Exception):
               "\n*  Unknown contacts boundary conditions     *" +\
               "\n*********************************************"
         logging.error(msg)
-        logging.error("Contacts boundary conditions: '{0}' is different from 'Ohmic', 'Schottky', or 'Neumann'.\n".format(BCs))
+        logging.error(f"Contacts boundary conditions: '{BCs}' is different from 'Ohmic', 'Schottky', or 'Neumann'.\n")
 
  
 class Solver():
@@ -64,7 +64,7 @@ class Solver():
     equilibrium: numpy array of floats
         Electrostatic potential computed at thermal equilibrium.
     """
-    warnings.warn("Deprecated method, use common_solver instead", DeprecationWarning)
+
     def __init__(self, use_mumps=True):
 
         self.equilibrium = None
@@ -189,11 +189,9 @@ class Solver():
 
         # Make a linear guess for the equilibrium potential
         v = np.linspace(v_left, v_right, system.nx)
-        if system.dimension == 2:
-            # replicate the guess in the y-direction
-            v = np.tile(v, system.ny) 
 
-
+        # replicate the guess in the y-direction
+        v = np.tile(v, system.ny)
         return v
 
     def common_solver(self, compute = 'all', system = None, guess=None, tol=1e-6, periodic_bcs=True,\
@@ -274,7 +272,7 @@ class Solver():
             if info == 0:
                 return dx
             elif info > 0:
-                msg = "**  Iterative sparse solver failed after {0} iterations. **".format(info)
+                msg = f"**  Iterative sparse solver failed after {info} iterations. **"
                 logging.error(msg)
             else:
                 msg = "**  Iterative sparse solver failed on wrong input. **"
@@ -284,24 +282,10 @@ class Solver():
         # Compute the right hand side of J * x = f
         if self.equilibrium is None:
             size = system.nx * system.ny
-            if system.dimension != 1:
-                rhs = importlib.import_module('.getFandJ_eq{0}'.format(system.dimension), 'sesame')
-                f, rows, columns, data = rhs.getFandJ_eq(system, x, periodic_bcs)
-            else:
-                rhs = importlib.import_module('.getFandJ_eq1'.format(system.dimension), 'sesame')
-                f, rows, columns, data = rhs.getFandJ_eq(system, x)
-
+            f, rows, columns, data = getFandJ_eq.getFandJ_eq(system, x, periodic_bcs)
         else:
-            size = 3 * system.nx * system.ny
-            if periodic_bcs is False and system.dimension != 1:
-                rhs = importlib.import_module('.getF{0}_abrupt'.format(system.dimension), 'sesame')
-                lhs = importlib.import_module('.jacobian{0}_abrupt'.format(system.dimension), 'sesame')
-            else:
-                rhs = importlib.import_module('.getF{0}'.format(system.dimension), 'sesame')
-                lhs = importlib.import_module('.jacobian{0}'.format(system.dimension), 'sesame')
-
-            f = rhs.getF(system, x[2::3], x[0::3], x[1::3], self.equilibrium)
-            rows, columns, data = lhs.getJ(system, x[2::3], x[0::3], x[1::3])
+            f = getF.getF(system, x[2::3], x[0::3], x[1::3], self.equilibrium)
+            rows, columns, data = jacobian.getJ(system, x[2::3], x[0::3], x[1::3])
 
         # form the Jacobian
         if self.use_mumps and mumps_available:
@@ -318,7 +302,7 @@ class Solver():
 
         for gdx, gamma in enumerate(htpy):
             if verbose:
-                logging.info("Newton loop {0}/{1}".format(gdx+1, htp))
+                logging.info(f"Newton loop {gdx+1}/{htp}")
 
             if gamma < 1:
                 htol = 1
@@ -346,14 +330,12 @@ class Solver():
                     dx = self._sparse_solver(J, -f, iterative, inner_tol)
                     if dx is None:
                         raise SparseSolverError
-                        break
                     else:
                         dx.transpose()
                         # compute error
                         error = max(np.abs(dx))
                         if np.isnan(error) or error > 1e30:
                             raise NewtonError
-                            break
                         if error < htol:
                             converged = True
                         else: 
@@ -454,7 +436,7 @@ class Solver():
                 logging.info("Equilibrium potential already computed. Moving on.")
 
         else:
-            self.solve_equilibrium(system, tol=tol, periodic_bcs=periodic_bcs,\
+            self.common_solver('Poisson',system, tol=tol, periodic_bcs=periodic_bcs,\
                            maxiter=maxiter, verbose=verbose,\
                            iterative=iterative, inner_tol=inner_tol, htp=htp)
 
@@ -468,7 +450,7 @@ class Solver():
         for idx, vapp in enumerate(Vapp):
 
             if verbose:
-                logging.info("Applied voltage: {0} V".format(voltages[idx]))
+                logging.info(f"Applied voltage: {voltages[idx]} V")
 
             # Apply the voltage on the right contact
             result['v'][s] = self.equilibrium[s] + q*vapp
@@ -480,13 +462,13 @@ class Solver():
 
             if result is not None:
                 # 1. Save efn, efp, v
-                name = file_name + "_{0}".format(idx)
+                name = file_name + f"_{idx}"
                 # add some system settings to the saved results
 
                 if fmt == 'mat':
                     save_sim(system, result, name, fmt='mat')
                 else:
-                    filename = "%s.gzip" % name
+                    filename = f"{name}.gzip"
                     save_sim(system, result, filename)
                 # 2. Compute the steady state current
                 #try:
@@ -498,9 +480,8 @@ class Solver():
 
             else:
                 logging.info("The solver failed to converge for the applied voltage"\
-                      + " {0} V (index {1}).".format(voltages[idx], idx))
+                      + f" {voltages[idx]} V (index {idx}).")
                 return J
-                break
         return J
 
 
