@@ -89,7 +89,7 @@ print(j*sys.scaling.current*sys.scaling.length*1e3)
 
 
 # specify applied voltages
-voltages = np.linspace(0,.9,10)
+voltages = np.linspace(0,.4,5)
 # find j-v
 j = sesame.IVcurve(sys, voltages, solution, '2dGB_V')
 
